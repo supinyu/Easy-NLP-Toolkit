@@ -29,17 +29,19 @@ def data_util(file_input):
     train_data = data_list[100:]
     train_data_list = [{"text": item[0], "completion": item[1]} for item in train_data]
 
-    with open("auto_knowledge_car_llm_train.json", "w") as fw:
-        fw.write(json.dumps(train_data_list, indent=4, ensure_ascii=False))
-    with open("auto_knowledge_car_llm_eval.json", "w") as fw:
-        fw.write(json.dumps(eval_data_list, indent=4, ensure_ascii=False))
+    with open("auto_knowledge_car_llm_train.csv", "w") as fw:
+        for item in train_data_list:
+            fw.write(json.dumps(item, ensure_ascii=False) + "\n")
+    with open("auto_knowledge_car_llm_eval.csv", "w") as fw:
+        for item in eval_data_list:
+            fw.write(json.dumps(item, ensure_ascii=False) + "\n")
 
 
 if __name__ == "__main__":
-    # data_util("auto_knowledge_car_train.json")
-    data_file_dict = {}
-    data_extension = "json"
-    data_file_dict["train"] = "auto_knowledge_car_llm_train.json"
-    data_file_dict["validation"] = "auto_knowledge_car_llm_eval.json"
-    local_dataset = load_dataset(data_extension, data_files=data_file_dict)
-    print(local_dataset)
+    data_util("auto_knowledge_car_train.json")
+    # data_file_dict = {}
+    # data_extension = "json"
+    # data_file_dict["train"] = "auto_knowledge_car_llm_train.json"
+    # data_file_dict["validation"] = "auto_knowledge_car_llm_eval.json"
+    # local_dataset = load_dataset(data_extension, data_files=data_file_dict)
+    # print(local_dataset)

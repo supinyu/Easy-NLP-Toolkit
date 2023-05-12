@@ -1433,3 +1433,8 @@ class ChatGLMForConditionalGeneration(ChatGLMPreTrainedModel):
 
         self.transformer = quantize(self.transformer, bits, empty_init=empty_init, **kwargs)
         return self
+
+    @torch.no_grad()
+    def generate_one(self, input_ids, **gen_kwargs):
+        response = self.generate(input_ids, **gen_kwargs)
+        return response
