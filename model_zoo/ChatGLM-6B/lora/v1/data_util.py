@@ -18,7 +18,6 @@ class GLMDataSet(Dataset):
         max_target_len = max_len - max_src_len - 3
         self.all_data = []
         with open(data_path, "r", encoding="utf-8") as f:
-            # data_json = json.loads(f)
             for i, line in enumerate(f):
                 sample = json.loads(line.strip())
                 src_tokens = tokenizer.tokenize(sample["text"])
@@ -61,13 +60,9 @@ def data_collator(batch: list) -> dict:
             "labels": pad_sequence(labels_list, batch_first=True, padding_value=pad_token)}
 
 
-def preprocess_function_train(examples):
-    pass
-
-
 if __name__ == "__main__":
     tokenizer = AutoTokenizer.from_pretrained("THUDM/chatglm-6b", trust_remote_code=True)
-    train_path = "/Users/supinyu/Documents/GitHub/Easy-NLP-Toolkit/datasets/auto_knowledage_extract_cat/auto_knowledge_car_llm_eval.csv"
+    train_path = "/datasets/auto_knowledage_extract_cat/auto_knowledge_car_llm_eval.csv"
     max_len = 768
     max_src_len = 450
     prompt_text = ""

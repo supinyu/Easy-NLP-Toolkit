@@ -39,9 +39,9 @@ def data_util(file_input):
 
 if __name__ == "__main__":
     data_util("auto_knowledge_car_train.json")
-    # data_file_dict = {}
-    # data_extension = "json"
-    # data_file_dict["train"] = "auto_knowledge_car_llm_train.json"
-    # data_file_dict["validation"] = "auto_knowledge_car_llm_eval.json"
-    # local_dataset = load_dataset(data_extension, data_files=data_file_dict)
-    # print(local_dataset)
+    data_file_dict = {}
+    data_extension = "json"
+    data_file_dict["train"] = "auto_knowledge_car_llm_train.csv"
+    data_file_dict["validation"] = "auto_knowledge_car_llm_eval.csv"
+    local_dataset = load_dataset(data_extension, data_files=data_file_dict)
+    print(local_dataset)
