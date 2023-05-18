@@ -35,11 +35,11 @@ def main():
     set_seed(training_args.seed)
 
     # Load dataset
-    train_dataset = None
-    data_files = data_args.train_file
+    data_files = {}
+    data_files["train"] = data_args.train_file
     extension = data_args.train_file.split(".")[-1]
 
-    train_dataset = load_dataset(
+    raw_datasets = load_dataset(
         extension,
         data_files=data_files,
         cache_dir=model_args.cache_dir,
@@ -53,7 +53,7 @@ def main():
 
     tokenizer = AutoTokenizer.from_pretrained(model_args.model_name_or_path, trust_remote_code=True)
     model = AutoModel.from_pretrained(model_args.model_name_or_path, config=config, trust_remote_code=True)
-    config = LoraConfig(r=training_args.lora_r,
+    config = LoraConfig(r=training_args.lora_rank,
                         lora_alpha=32,
                         target_modules=["query_key_value"],
                         lora_dropout=0.1,
@@ -66,11 +66,6 @@ def main():
     model = model.half()
     model.print_trainable_parameters()
 
-    # Preprocessing the datasets.
-    # We need to tokenize inputs and targets.
-
-    column_names = train_dataset.column_names
-
     # Get the column names for input/target.
     prompt_column = data_args.prompt_column
     response_column = data_args.response_column
@@ -79,6 +74,9 @@ def main():
     # Temporarily set max_target_length for training.
     max_target_length = data_args.max_target_length
 
+
+    # Preprocessing the datasets.
+    # We need to tokenize inputs and targets.
     def preprocess_function_train(examples):
         max_seq_length = data_args.max_source_length + data_args.max_target_length
 
@@ -132,9 +130,13 @@ def main():
         print("label_ids", example["labels"])
         print("labels", tokenizer.decode(example["labels"]))
 
+    if "train" not in raw_datasets:
+        raise ValueError("--do_train requires a train dataset")
+    train_dataset = raw_datasets["train"]
     if data_args.max_train_samples is not None:
         max_train_samples = min(len(train_dataset), data_args.max_train_samples)
         train_dataset = train_dataset.select(range(max_train_samples))
+    column_names = train_dataset.column_names
     with training_args.main_process_first(desc="train dataset map pre-processing"):
         train_dataset = train_dataset.map(
             preprocess_function_train,
