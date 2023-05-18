@@ -4,8 +4,10 @@
 # @File    : deepspeed_finetuning_lora_v2.py
 
 import logging
+import os
 import sys
 
+import torch
 from datasets import load_dataset
 from peft import LoraConfig, get_peft_model
 from torch.utils.tensorboard import SummaryWriter
@@ -17,6 +19,22 @@ from arguments import ModelArguments, DataTrainingArguments, FineTuneArguments
 
 logger = logging.getLogger(__name__)
 log_name = __name__
+
+
+class ModifiedTrainer(Trainer):
+    def save_model(self, output_dir=None, _internal_call=False):
+        from transformers.trainer import TRAINING_ARGS_NAME
+        CONFIG_NAME = "config.json"
+        WEIGHTS_NAME = "pytorch_model.bin"
+        output_model_file = os.path.join(output_dir, WEIGHTS_NAME)
+        output_config_file = os.path.join(output_dir, CONFIG_NAME)
+        os.makedirs(output_dir, exist_ok=True)
+        torch.save(self.args, os.path.join(output_dir, TRAINING_ARGS_NAME))
+        saved_params = {
+            k: v.to("cpu") for k, v in self.model.named_parameters() if v.requires_grad
+        }
+        torch.save(saved_params, os.path.join(output_dir, output_model_file))
+        self.model.config.to_json_file(output_config_file)
 
 
 def main():
@@ -73,7 +91,6 @@ def main():
 
     # Temporarily set max_target_length for training.
     max_target_length = data_args.max_target_length
-
 
     # Preprocessing the datasets.
     # We need to tokenize inputs and targets.
@@ -160,7 +177,7 @@ def main():
     )
 
     # Initialize our Trainer
-    trainer = Trainer(
+    trainer = ModifiedTrainer(
         model=model,
         args=training_args,
         train_dataset=train_dataset,
