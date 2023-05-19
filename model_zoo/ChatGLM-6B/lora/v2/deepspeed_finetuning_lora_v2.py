@@ -22,10 +22,16 @@ log_name = __name__
 
 
 class ModifiedTrainer(Trainer):
+    def compute_loss(self, model, inputs, return_outputs=False):
+        return model(
+            input_ids=inputs["input_ids"],
+            labels=inputs["labels"],
+        ).loss
+
     def save_model(self, output_dir=None, _internal_call=False):
         from transformers.trainer import TRAINING_ARGS_NAME
         CONFIG_NAME = "config.json"
-        WEIGHTS_NAME = "pytorch_model.bin"
+        WEIGHTS_NAME = "adapter_model.bin"
         output_model_file = os.path.join(output_dir, WEIGHTS_NAME)
         output_config_file = os.path.join(output_dir, CONFIG_NAME)
         os.makedirs(output_dir, exist_ok=True)
@@ -33,8 +39,10 @@ class ModifiedTrainer(Trainer):
         saved_params = {
             k: v.to("cpu") for k, v in self.model.named_parameters() if v.requires_grad
         }
-        torch.save(saved_params, os.path.join(output_dir, output_model_file))
+        torch.save(saved_params, output_model_file)
         self.model.config.to_json_file(output_config_file)
+        self.model.save_pretrained(output_dir)
+
 
 
 def main():

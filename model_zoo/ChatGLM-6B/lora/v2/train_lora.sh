@@ -10,8 +10,8 @@ CUDA_VISIBLE_DEVICES=1,3 deepspeed deepspeed_finetuning_lora_v2.py \
   --source_prefix source_prefix_str\
   --overwrite_cache \
   --overwrite_output_dir \
-  --max_source_length 512 \
-  --max_target_length 256 \
+  --max_source_length 450 \
+  --max_target_length 318 \
   --num_train_epochs 5 \
   --per_device_train_batch_size 2 \
   --logging_steps 50 \

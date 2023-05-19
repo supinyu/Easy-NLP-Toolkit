@@ -62,9 +62,9 @@ def data_collator(batch: list) -> dict:
 
 if __name__ == "__main__":
     tokenizer = AutoTokenizer.from_pretrained("THUDM/chatglm-6b", trust_remote_code=True)
-    train_path = "/datasets/auto_knowledage_extract_cat/auto_knowledge_car_llm_eval.csv"
+    train_path = "/Users/supinyu/Documents/GitHub/Easy-NLP-Toolkit/datasets/auto_knowledage_extract_cat/auto_knowledge_car_llm_eval.json"
     max_len = 768
     max_src_len = 450
-    prompt_text = ""
+    prompt_text = "你现在是一个信息抽取模型，请你帮我抽取出关系内容为\"性能故障\", \"部件故障\", \"组成\"和 \"检测工具\"的相关三元组，三元组内部用\"_\"连接，三元组之间用\\n分割。文本："
     train_dataset = GLMDataSet(train_path, tokenizer, max_len, max_src_len, prompt_text)
     print(train_dataset[0])
