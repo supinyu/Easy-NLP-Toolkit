@@ -28,7 +28,7 @@ log_name = __name__
 def set_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--train_path', default='data/spo_0.json', type=str, help='')
-    parser.add_argument('--model_dir', default="/data/work/lcong/public_model_path/ChatGLM-6B/", type=str, help='')
+    parser.add_argument('--model_name_or_path', default="/data/work/lcong/public_model_path/ChatGLM-6B/", type=str, help='')
     parser.add_argument('--num_train_epochs', default=5, type=int, help='')
     parser.add_argument('--per_device_train_batch_size', default=2, type=int, help='')
     parser.add_argument('--learning_rate', default=1e-5, type=float, help='')
@@ -75,8 +75,8 @@ def main():
         data_files=data_files
     )
 
-    model = AutoModel.from_pretrained(args.model_dir, trust_remote_code=True)
-    tokenizer = AutoTokenizer.from_pretrained(args.model_dir, trust_remote_code=True)
+    model = AutoModel.from_pretrained(args.model_name_or_path, trust_remote_code=True)
+    tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_path, trust_remote_code=True)
 
     config = LoraConfig(r=args.lora_rank,
                         lora_alpha=32,
@@ -159,7 +159,7 @@ def main():
         raise ValueError("--do_train requires a train dataset")
     train_dataset = raw_datasets["train"]
     column_names = train_dataset.column_names
-    with accelerator.main_process_first(desc="train dataset map pre-processing"):
+    with accelerator.main_process_first():
         train_dataset = train_dataset.map(
             preprocess_function_train,
             batched=True,
