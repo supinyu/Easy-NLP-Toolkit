@@ -12,5 +12,5 @@ accelerate launch --config_file acclerator_config.yaml acclerator_train_lora.py 
   --max_target_length 318 \
   --num_train_epochs 5 \
   --per_device_train_batch_size 2 \
-  --learning_rate 1e-5 \
+  --learning_rate 2e-5 \
   --lora_rank 8

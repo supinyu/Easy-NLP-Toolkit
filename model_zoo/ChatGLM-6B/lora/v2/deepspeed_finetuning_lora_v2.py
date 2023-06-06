@@ -22,27 +22,22 @@ log_name = __name__
 
 
 class ModifiedTrainer(Trainer):
-    def compute_loss(self, model, inputs, return_outputs=False):
-        return model(
-            input_ids=inputs["input_ids"],
-            labels=inputs["labels"],
-        ).loss
 
-    def save_model(self, output_dir=None, _internal_call=False):
-        from transformers.trainer import TRAINING_ARGS_NAME
-        CONFIG_NAME = "config.json"
-        WEIGHTS_NAME = "adapter_model.bin"
-        output_model_file = os.path.join(output_dir, WEIGHTS_NAME)
-        output_config_file = os.path.join(output_dir, CONFIG_NAME)
+    def _save(self, output_dir=None, state_dict=None):
+        # If we are executing this function, we are the process zero, so we don't check for that.
+        output_dir = output_dir if output_dir is not None else self.args.output_dir
         os.makedirs(output_dir, exist_ok=True)
-        torch.save(self.args, os.path.join(output_dir, TRAINING_ARGS_NAME))
-        saved_params = {
-            k: v.to("cpu") for k, v in self.model.named_parameters() if v.requires_grad
-        }
-        torch.save(saved_params, output_model_file)
-        self.model.config.to_json_file(output_config_file)
-        self.model.save_pretrained(output_dir)
 
+        def save_tunable_parameters(model, path):
+            saved_params = {
+                k: v.to("cpu") for k, v in model.named_parameters() if v.requires_grad
+            }
+            # saved_params = model.state_dict()
+            torch.save(saved_params, path)
+
+        save_tunable_parameters(
+            self.model, os.path.join(output_dir, "chatglm-lora.pt")
+        )
 
 
 def main():
@@ -72,24 +67,24 @@ def main():
         use_auth_token=True if model_args.use_auth_token else None,
     )
 
-    prefix = data_args.source_prefix if data_args.source_prefix is not None else ""
+    prefix = "你现在是一个信息抽取模型，请你帮我抽取出关系内容为\"性能故障\", \"部件故障\", \"组成\"和 \"检测工具\"的相关三元组，三元组内部用\"_\"连接，三元组之间用\\n分割。文本："
 
     # Load pretrained model and tokenizer
-    config = AutoConfig.from_pretrained(model_args.model_name_or_path, trust_remote_code=True)
 
     tokenizer = AutoTokenizer.from_pretrained(model_args.model_name_or_path, trust_remote_code=True)
-    model = AutoModel.from_pretrained(model_args.model_name_or_path, config=config, trust_remote_code=True)
+    model = AutoModel.from_pretrained(model_args.model_name_or_path, trust_remote_code=True)
+
     config = LoraConfig(r=training_args.lora_rank,
                         lora_alpha=32,
                         target_modules=["query_key_value"],
                         lora_dropout=0.1,
-                        bias="none",
                         task_type="CAUSAL_LM",
                         inference_mode=False,
+                        bias="none"
                         )
 
     model = get_peft_model(model, config)
-    model = model.half()
+    #     model = model.half()
     model.print_trainable_parameters()
 
     # Get the column names for input/target.
@@ -193,12 +188,7 @@ def main():
         callbacks=[TensorBoardCallback(writer)],
         data_collator=data_collator
     )
-    model.gradient_checkpointing_enable()
-    model.enable_input_require_grads()
-    checkpoint = None
-    if training_args.resume_from_checkpoint is not None:
-        checkpoint = training_args.resume_from_checkpoint
-    train_result = trainer.train(resume_from_checkpoint=checkpoint)
+    train_result = trainer.train()
     model.save_pretrained(training_args.output_dir)
     trainer.save_state()
 

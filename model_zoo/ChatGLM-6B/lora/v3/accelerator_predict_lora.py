@@ -50,7 +50,7 @@ def main():
                         task_type="CAUSAL_LM",
                         inference_mode=True)
 
-    model = PeftModel.from_pretrained(model, config, torch_dtype=torch.float32)
+    model = get_peft_model(model, config)
     model.load_state_dict(torch.load(args.lora_model_dir), strict=False)
     model.half().cuda()
     model.eval()
@@ -73,7 +73,7 @@ def main():
                 input_ids = tokenizer.convert_tokens_to_ids(tokens)
                 # input_ids = tokenizer.encode("帮我写个快排算法")
 
-                input_ids = torch.tensor([input_ids]).to("cuda:{}".format(args.device))
+                input_ids = torch.tensor([input_ids]).to("cuda")
                 generation_kwargs = {
                     "min_length": 5,
                     "max_new_tokens": max_tgt_len,
@@ -108,7 +108,7 @@ def main():
     e_time = time.time()
     print("总耗时：{}s".format(e_time - s_time))
     print("total_fl_score: {}".format(f1 / eval_index))
-    save_path = os.path.join(args.model_dir, "ft_pt_answer.json")
+    save_path = os.path.join(args.lora_model_dir, "ft_pt_answer.json")
     fin = open(save_path, "w", encoding="utf-8")
     json.dump(save_data, fin, ensure_ascii=False, indent=4)
     fin.close()
