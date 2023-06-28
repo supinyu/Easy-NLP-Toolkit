@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2023/5/10 18:28
 # @Author  : supinyu
-# @File    : deepspeed_predict_lore.py
+# @File    : deepspeed_predict_lora_goat.py
 import torch
 import json
 from transformers import AutoTokenizer, AutoModel
